@@ -1,6 +1,7 @@
+import { validate } from "class-validator";
 import { GraphQLError } from "graphql";
-import { Arg, Query, Resolver } from "type-graphql";
-import { Country } from "../entities/Country";
+import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { Country, CountryCreateInput } from "../entities/Country";
 import { CountryCodes, CountryCodeType } from "./../types/types";
 
 @Resolver()
@@ -28,6 +29,32 @@ export class CountryResolver {
     if (!country) {
       throw new GraphQLError("Country not found");
     }
+    return country;
+  }
+
+  @Mutation(() => Country)
+  async createCountry(@Arg("data") data: CountryCreateInput): Promise<Country> {
+    // Verify data format before creating country
+    const errors = await validate(data);
+    if (errors.length > 0) {
+      throw new GraphQLError("Validation failed", {
+        extensions: {
+          errors: errors.map((err) => ({
+            field: err.property,
+            constraints: err.constraints,
+          })),
+        },
+      });
+    }
+
+    // Create an instance of Country
+    const country = new Country();
+
+    // Fill country with input data
+    Object.assign(country, data);
+
+    // Save new country in database
+    await country.save();
     return country;
   }
 }

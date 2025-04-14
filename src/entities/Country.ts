@@ -1,6 +1,8 @@
-import { Field, ID, ObjectType } from "type-graphql";
+import { IsIn, Length } from "class-validator";
+import { Field, ID, InputType, ObjectType } from "type-graphql";
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { CountryCodeType } from "../types/types";
+import { CountryCodes } from "../types/types";
+import type { CountryCodeType } from "./../types/types";
 
 // later :
 // code continent
@@ -22,5 +24,22 @@ export class Country extends BaseEntity {
 
   @Field()
   @Column({ length: 2 }) // Unicode
+  emoji!: string;
+}
+
+@InputType()
+export class CountryCreateInput {
+  @Field()
+  @IsIn(Object.values(CountryCodes), {
+    message: "Code should be one of the valid country codes",
+  })
+  code!: CountryCodeType; // Check if code country is valid
+
+  @Field()
+  @Length(2, 100, { message: "Name must be between 2 and 100 characters" })
+  name!: string;
+
+  @Field()
+  @Length(2, 2, { message: "Emoji must be exactly 2 characters" })
   emoji!: string;
 }
