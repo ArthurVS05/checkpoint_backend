@@ -69,6 +69,7 @@ export class CountryResolver {
     // Fill country with input data
     Object.assign(country, data);
 
+    // Assign continent object
     country.continent = continent;
 
     // Save new country in database
