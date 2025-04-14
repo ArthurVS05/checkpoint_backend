@@ -1,6 +1,6 @@
 import { validate } from "class-validator";
 import { GraphQLError } from "graphql";
-import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, ID, Mutation, Query, Resolver } from "type-graphql";
 import { Continent, ContinentCreateInput } from "../entities/Continent";
 
 @Resolver()
@@ -40,6 +40,23 @@ export class ContinentResolver {
 
     // Save new continent in database
     await continent.save();
+    return continent;
+  }
+
+  // Get a continent and its countries
+  @Query(() => Continent, { nullable: true })
+  async continentWithCountries(
+    @Arg("id", () => ID) id: number
+  ): Promise<Continent | null> {
+    const continent = await Continent.findOne({
+      where: { id },
+      relations: ["countries"],
+    });
+
+    if (!continent) {
+      throw new Error("Continent not found");
+    }
+
     return continent;
   }
 }
