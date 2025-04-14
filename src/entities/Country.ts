@@ -1,8 +1,16 @@
 import { IsIn, Length } from "class-validator";
 import { Field, ID, InputType, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { CountryCodes } from "../types/types";
 import type { CountryCodeType } from "./../types/types";
+import { Continent } from "./Continent";
 
 // later :
 // code continent
@@ -25,6 +33,12 @@ export class Country extends BaseEntity {
   @Field()
   @Column({ length: 2 }) // Unicode
   emoji!: string;
+
+  // Relation with Continent entity
+  @Field(() => Continent)
+  @ManyToOne(() => Continent)
+  @JoinColumn()
+  continent!: Continent;
 }
 
 @InputType()
@@ -42,4 +56,7 @@ export class CountryCreateInput {
   @Field()
   @Length(2, 2, { message: "Emoji must be exactly 2 characters" })
   emoji!: string;
+
+  @Field(() => ID)
+  continentId!: number;
 }

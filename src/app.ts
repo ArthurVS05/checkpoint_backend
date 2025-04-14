@@ -4,25 +4,16 @@ import { ApolloServer } from "@apollo/server";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { dataSource } from "./config/db";
+import { ContinentResolver } from "./resolvers/ContinentResolver";
 import { CountryResolver } from "./resolvers/CountryResolver";
-
-// export type MyContext = {
-//   req: IncomingMessage;
-//   res: ServerResponse;
-//   user?: User;
-// };
 
 export const createApp = async () => {
   await dataSource.initialize();
   console.log("Datasource is connected");
 
   const schema = await buildSchema({
-    resolvers: [CountryResolver],
+    resolvers: [CountryResolver, ContinentResolver],
   });
-
-  // const context = async ({ req, res }: MyContext): Promise<MyContext> => {
-  //   return { req, res };
-  // };
 
   const server = new ApolloServer({ schema });
 
@@ -30,7 +21,6 @@ export const createApp = async () => {
 
   const { url } = await startStandaloneServer(server, {
     listen: { port: PORT },
-    // context: context,
   });
 
   console.log(`GraphQL server ready at ${url}`);

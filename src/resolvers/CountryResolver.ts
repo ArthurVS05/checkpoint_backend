@@ -1,6 +1,7 @@
 import { validate } from "class-validator";
 import { GraphQLError } from "graphql";
-import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, ID, Mutation, Query, Resolver } from "type-graphql";
+import { Continent } from "../entities/Continent";
 import { Country, CountryCreateInput } from "../entities/Country";
 import { CountryCodes, CountryCodeType } from "./../types/types";
 
@@ -9,7 +10,7 @@ export class CountryResolver {
   // Get all countries
   @Query(() => [Country], { nullable: true })
   async countries(): Promise<Country[] | null> {
-    const countries = await Country.find();
+    const countries = await Country.find({ relations: ["continent"] });
     if (!countries) {
       throw new GraphQLError("Error to get countries");
     }
@@ -25,6 +26,7 @@ export class CountryResolver {
       where: {
         code,
       },
+      relations: ["continent"],
     });
     if (!country) {
       throw new GraphQLError("Country not found");
@@ -46,6 +48,20 @@ export class CountryResolver {
         },
       });
     }
+    // Check if continent exists
+    const continent = await Continent.findOne({
+      where: {
+        id: data.continentId,
+      },
+    });
+    if (!continent) {
+      throw new GraphQLError("Continent not found", {
+        extensions: {
+          field: "continentId",
+          message: "The specified continent does not exist",
+        },
+      });
+    }
 
     // Create an instance of Country
     const country = new Country();
@@ -53,8 +69,24 @@ export class CountryResolver {
     // Fill country with input data
     Object.assign(country, data);
 
+    country.continent = continent;
+
     // Save new country in database
     await country.save();
     return country;
+  }
+
+  @Mutation(() => String)
+  async deleteCountry(@Arg("id", () => ID) id: number): Promise<String> {
+    try {
+      const countryToDelete = await Country.findOneBy({ id });
+      if (!countryToDelete) {
+        throw new GraphQLError("Country not found");
+      }
+      await countryToDelete.remove();
+      return "country deleted";
+    } catch (error) {
+      throw error;
+    }
   }
 }
